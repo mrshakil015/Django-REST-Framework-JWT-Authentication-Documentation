@@ -127,7 +127,7 @@ from rest_framework import serializers
 from .models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
-		password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -141,7 +141,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-				user = User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
         return user
 ```
 
@@ -256,7 +256,7 @@ Includes app routes into the main project.
 from django.urls import path, include
 
 urlpatterns = [
-    path('api/auth/', include('users_auth.urls')),
+    path('api/', include('users_auth.urls')),
 ]
 ```
 
