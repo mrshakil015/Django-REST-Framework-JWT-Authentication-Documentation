@@ -170,32 +170,6 @@ class LoginSerializer(serializers.Serializer):
         return data
 ```
 
-### Logout Serializer
-
-Validates and blacklists the refresh token.
-
-```python
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
-
-class LogoutSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-
-    def validate(self, attrs):
-        self.token = attrs.get('refresh')
-
-        if not self.token:
-            raise serializers.ValidationError("Refresh token is required")
-        return attrs
-
-    def save(self, **kwargs):
-        try:
-            token = RefreshToken(self.token)
-            token.blacklist()
-        except Exception:
-            raise ValidationError("Invalid or expired token")
-```
-
 # 5. Views
 
 ### Register View
@@ -258,27 +232,28 @@ class LoginView(generics.GenericAPIView):
 
 ### Logout View
 
-Receives refresh token and logs out the user by invalidating it.
+Apply logout with out serializer. Receives refresh token and logs out the user by invalidating it.
 
 ```python
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .serializers import LogoutSerializer
-
-class LogoutView(generics.GenericAPIView):
-    serializer_class = LogoutSerializer
-    permission_classes = [IsAuthenticated ]
+from rest_framework.views import APIView
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            refresh_token = request.data.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()  
 
-        return Response(
-            {"message": "Logout successful"},
-            status=status.HTTP_205_RESET_CONTENT
-        )
+            return Response({
+                "success": True,
+                "message": "Logout successful"
+            })
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": "Invalid refresh token"
+            }, status=status.HTTP_400_BAD_REQUEST)
 ```
 
 # 6. URL Configuration
