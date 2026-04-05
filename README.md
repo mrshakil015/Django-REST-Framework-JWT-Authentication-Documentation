@@ -85,6 +85,17 @@ CORS_ALLOW_METHODS = [
 ]
 ```
 
+Add CORS Middleware: `corsheaders.middleware.CorsMiddleware`
+
+```python
+MIDDLEWARE = [
+	  ......
+    'corsheaders.middleware.CorsMiddleware', #----------- This line
+    'django.middleware.common.CommonMiddleware',
+		............
+]
+```
+
 # 3. Custom User Model
 
 Extends Django’s default user to include roles (manager/staff).
