@@ -170,6 +170,32 @@ class LoginSerializer(serializers.Serializer):
         return data
 ```
 
+### Logout Serializer
+
+Validates and blacklists the refresh token.
+
+```python
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs.get('refresh')
+
+        if not self.token:
+            raise serializers.ValidationError("Refresh token is required")
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            token = RefreshToken(self.token)
+            token.blacklist()
+        except Exception:
+            raise ValidationError("Invalid or expired token")
+```
+
 # 5. Views
 
 ### Register View
@@ -230,18 +256,44 @@ class LoginView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
 ```
 
+### Logout View
+
+Receives refresh token and logs out the user by invalidating it.
+
+```python
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .serializers import LogoutSerializer
+
+class LogoutView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated ]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"message": "Logout successful"},
+            status=status.HTTP_205_RESET_CONTENT
+        )
+```
+
 # 6. URL Configuration
 
 Defines authentication-related API endpoints.
 
 ```python
 from django.urls import path
-from .views import RegisterView, LoginView
+from .views import RegisterView, LoginView,LogoutView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -319,6 +371,20 @@ Return Response
     "email":"shakil@example.com",
     "user_type":"manager"
   }
+}
+```
+
+### Logout API
+
+```json
+/api/logout/
+```
+
+Request Body
+
+```json
+{
+  "refresh": "your_refresh_token"
 }
 ```
 
