@@ -3,13 +3,16 @@ This guide explains how to implement JWT Authentication in a Django REST Framewo
 
 # 1. Install Required Packages
 
+Installed `djangorestframework & simplejwt`
+
 ```python
 pip install djangorestframework
 pip install djangorestframework-simplejwt
-pip install django-cors-headers
 ```
 
-## 2. Configure `settings.py`
+## 2. JWT Configure `settings.py`
+
+Then, django project must be configured to use the library. 
 
 ### Add Installed Apps
 
@@ -17,17 +20,8 @@ pip install django-cors-headers
 INSTALLED_APPS = [
     ...
     'rest_framework',
-    'corsheaders',
     'rest_framework_simplejwt',
 ]
-```
-
-### Custom User Model
-
-Tells Django to use your custom user model instead of the default one.
-
-```python
-AUTH_USER_MODEL = 'users_auth.User'
 ```
 
 ### DRF Authentication Setup
@@ -42,7 +36,7 @@ REST_FRAMEWORK = {
 }
 ```
 
-### JWT Configuration
+### Customize JWT Configuration
 
 Controls token lifetime and authentication header format.
 
@@ -56,9 +50,26 @@ SIMPLE_JWT = {
 }
 ```
 
+## 3. Cors-Headers Configure `settings.py`
+
+Installed `djangorestframework & simplejwt`
+
+```python
+pip install django-cors-headers
+```
+
+### Add Installed Apps
+
+```python
+INSTALLED_APPS = [
+    ...
+		'corsheaders',
+]
+```
+
 ### CORS Configuration (Frontend Integration)
 
-Allows your frontend (React, etc.) to communicate with backend APIs.
+Allows your frontend (React, etc.) domain or subdomain to communicate with backend APIs.
 
 ```python
 CORS_ALLOWED_ORIGINS = [
@@ -96,7 +107,7 @@ MIDDLEWARE = [
 ]
 ```
 
-# 3. Custom User Model
+# 4. Create Custom User Model
 
 Extends Django’s default user to include roles (manager/staff).
 
@@ -116,7 +127,15 @@ class User(AbstractUser):
         return self.username
 ```
 
-# 4. Serializer
+### Custom User Model Configuration on `settings.py`
+
+Tells Django to use your custom user model instead of the default one.
+
+```python
+AUTH_USER_MODEL = 'users_auth.User'
+```
+
+# 5. Create Serializer Class on `serializers.py`
 
 ### Register Serializer
 
@@ -210,7 +229,6 @@ from .serializers import LoginSerializer
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    permission_classes = []
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -232,7 +250,7 @@ class LoginView(generics.GenericAPIView):
 
 ### Logout View
 
-Apply logout with out serializer. Receives refresh token and logs out the user by invalidating it.
+Apply logout without serializer. Receives refresh token and logs out the user by invalidating it.
 
 ```python
 from rest_framework.views import APIView
@@ -283,7 +301,7 @@ Includes app routes into the main project.
 from django.urls import path, include
 
 urlpatterns = [
-    path('api/', include('users_auth.urls')),
+    path('api/auth/', include('users_auth.urls')),
 ]
 ```
 
